@@ -32,8 +32,51 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                   actions: [
+                    // 현재 분석 모드 표시 뱃지
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12, bottom: 12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: provider.analysisMode == AnalysisMode.local
+                              ? const Color(0xFF00B4D8).withValues(alpha: 0.12)
+                              : const Color(0xFF6C63FF).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              provider.analysisMode == AnalysisMode.local
+                                  ? Icons.phone_android
+                                  : Icons.auto_awesome,
+                              size: 13,
+                              color: provider.analysisMode == AnalysisMode.local
+                                  ? const Color(0xFF00B4D8)
+                                  : const Color(0xFF6C63FF),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              provider.analysisMode == AnalysisMode.local
+                                  ? '로컬'
+                                  : 'Gemini',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color:
+                                    provider.analysisMode == AnalysisMode.local
+                                        ? const Color(0xFF00B4D8)
+                                        : const Color(0xFF6C63FF),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                     IconButton(
-                      icon: const Icon(Icons.settings, color: Color(0xFF1A1A2E)),
+                      icon:
+                          const Icon(Icons.settings, color: Color(0xFF1A1A2E)),
                       onPressed: () => _showSettingsDialog(context, provider),
                     ),
                   ],
@@ -143,7 +186,9 @@ class HomeScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            remaining > 0 ? '남은 칼로리: $remaining kcal' : '목표 초과: ${-remaining} kcal',
+            remaining > 0
+                ? '남은 칼로리: $remaining kcal'
+                : '목표 초과: ${-remaining} kcal',
             style: TextStyle(
               color: remaining > 0 ? Colors.white70 : Colors.redAccent.shade100,
               fontSize: 13,
@@ -214,12 +259,14 @@ class HomeScreen extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.error_outline, color: Colors.red.shade400, size: 20),
+                  Icon(Icons.error_outline,
+                      color: Colors.red.shade400, size: 20),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       provider.errorMessage!,
-                      style: TextStyle(color: Colors.red.shade700, fontSize: 13),
+                      style:
+                          TextStyle(color: Colors.red.shade700, fontSize: 13),
                     ),
                   ),
                 ],
@@ -387,8 +434,8 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
           ),
-          ...provider.todayHistory.map((result) => _buildFoodListTile(
-                context, result, provider)),
+          ...provider.todayHistory
+              .map((result) => _buildFoodListTile(context, result, provider)),
           const SizedBox(height: 8),
         ],
       ),
@@ -443,7 +490,8 @@ class HomeScreen extends StatelessWidget {
 
   Future<void> _analyzeAndNavigate(
       BuildContext context, AppProvider provider) async {
-    if (!provider.isApiKeySet) {
+    // Gemini 모드인데 API 키 미설정 시 설정 다이얼로그 오픈
+    if (provider.analysisMode == AnalysisMode.gemini && !provider.isApiKeySet) {
       _showSettingsDialog(context, provider);
       return;
     }
@@ -460,8 +508,7 @@ class HomeScreen extends StatelessWidget {
     }
   }
 
-  void _confirmDelete(
-      BuildContext context, String id, AppProvider provider) {
+  void _confirmDelete(BuildContext context, String id, AppProvider provider) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -486,85 +533,175 @@ class HomeScreen extends StatelessWidget {
   }
 
   void _showSettingsDialog(BuildContext context, AppProvider provider) {
-    final apiKeyController =
-        TextEditingController(text: provider.apiKey ?? '');
+    final apiKeyController = TextEditingController(text: provider.apiKey ?? '');
     final goalController =
         TextEditingController(text: provider.goalCalories.toString());
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('설정'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Gemini API 키',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-              const SizedBox(height: 8),
-              TextField(
-                controller: apiKeyController,
-                obscureText: true,
-                decoration: InputDecoration(
-                  hintText: 'API 키를 입력하세요',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) => AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('설정'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── 분석 모드 ──────────────────────────────
+                const Text('분석 방식',
+                    style:
+                        TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                const SizedBox(height: 8),
+                _buildModeOption(
+                  ctx: ctx,
+                  setModalState: setModalState,
+                  provider: provider,
+                  mode: AnalysisMode.local,
+                  icon: Icons.phone_android,
+                  title: '로컬 분석 (오프라인)',
+                  subtitle: 'API 키 불필요 • 기기에서 직접 처리\n인터넷 연결 없이 사용 가능',
+                  color: const Color(0xFF00B4D8),
                 ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Google AI Studio에서 API 키를 발급받으세요',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-              const SizedBox(height: 20),
-              const Text('일일 목표 칼로리',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-              const SizedBox(height: 8),
-              TextField(
-                controller: goalController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  hintText: '2000',
-                  suffixText: 'kcal',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                const SizedBox(height: 8),
+                _buildModeOption(
+                  ctx: ctx,
+                  setModalState: setModalState,
+                  provider: provider,
+                  mode: AnalysisMode.gemini,
+                  icon: Icons.auto_awesome,
+                  title: 'Gemini AI (온라인)',
+                  subtitle: 'Google Gemini API 키 필요\n더 정확한 분석 결과 제공',
+                  color: const Color(0xFF6C63FF),
                 ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('취소'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final key = apiKeyController.text.trim();
-              if (key.isNotEmpty) {
-                provider.setApiKey(key);
-              }
-              final goal = int.tryParse(goalController.text.trim());
-              if (goal != null && goal > 0) {
-                provider.setGoalCalories(goal);
-              }
-              Navigator.pop(ctx);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6C63FF),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                // ── Gemini API 키 (gemini 모드일 때만) ────
+                if (provider.analysisMode == AnalysisMode.gemini) ...[
+                  const SizedBox(height: 20),
+                  const Text('Gemini API 키',
+                      style:
+                          TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: apiKeyController,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      hintText: 'API 키를 입력하세요',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  GestureDetector(
+                    child: const Text(
+                      'Google AI Studio에서 무료 발급',
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF6C63FF),
+                          decoration: TextDecoration.underline),
+                    ),
+                  ),
+                ],
+                // ── 목표 칼로리 ────────────────────────────
+                const SizedBox(height: 20),
+                const Text('일일 목표 칼로리',
+                    style:
+                        TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: goalController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    hintText: '2000',
+                    suffixText: 'kcal',
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
+                  ),
+                ),
+              ],
             ),
-            child: const Text('저장'),
           ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('취소'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final key = apiKeyController.text.trim();
+                if (key.isNotEmpty) provider.setApiKey(key);
+                final goal = int.tryParse(goalController.text.trim());
+                if (goal != null && goal > 0) provider.setGoalCalories(goal);
+                Navigator.pop(ctx);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6C63FF),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+              child: const Text('저장'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModeOption({
+    required BuildContext ctx,
+    required StateSetter setModalState,
+    required AppProvider provider,
+    required AnalysisMode mode,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+  }) {
+    final isSelected = provider.analysisMode == mode;
+    return GestureDetector(
+      onTap: () {
+        setModalState(() => provider.setAnalysisMode(mode));
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color:
+              isSelected ? color.withValues(alpha: 0.08) : Colors.grey.shade50,
+          border: Border.all(
+            color: isSelected ? color : Colors.grey.shade300,
+            width: isSelected ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: isSelected ? color : Colors.grey, size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: isSelected ? color : Colors.black87)),
+                  const SizedBox(height: 2),
+                  Text(subtitle,
+                      style: const TextStyle(
+                          fontSize: 11, color: Colors.grey, height: 1.4)),
+                ],
+              ),
+            ),
+            if (isSelected) Icon(Icons.check_circle, color: color, size: 20),
+          ],
+        ),
       ),
     );
   }

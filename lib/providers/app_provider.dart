@@ -2,13 +2,17 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/food_analysis_result.dart';
 import '../services/food_analysis_service.dart';
+import '../services/local_food_analysis_service.dart';
 import '../services/image_picker_service.dart';
 import '../services/storage_service.dart';
+
+enum AnalysisMode { local, gemini }
 
 /// 앱 전체 상태를 관리하는 Provider
 class AppProvider extends ChangeNotifier {
   final ImagePickerService _imagePickerService = ImagePickerService();
   final StorageService _storageService = StorageService();
+  final LocalFoodAnalysisService _localService = LocalFoodAnalysisService();
   FoodAnalysisService? _foodAnalysisService;
 
   // 상태
@@ -20,6 +24,7 @@ class AppProvider extends ChangeNotifier {
   int _goalCalories = 2000;
   FoodAnalysisResult? _currentResult;
   File? _selectedImage;
+  AnalysisMode _analysisMode = AnalysisMode.local;
 
   // Getters
   List<FoodAnalysisResult> get history => _history;
@@ -31,19 +36,22 @@ class AppProvider extends ChangeNotifier {
   FoodAnalysisResult? get currentResult => _currentResult;
   File? get selectedImage => _selectedImage;
   bool get isApiKeySet => _apiKey != null && _apiKey!.isNotEmpty;
+  AnalysisMode get analysisMode => _analysisMode;
 
   int get todayTotalCalories =>
       _todayHistory.fold(0, (sum, e) => sum + e.totalCalories);
 
-  double get todayProgress =>
-      _goalCalories > 0
-          ? (todayTotalCalories / _goalCalories).clamp(0.0, 2.0)
-          : 0.0;
+  double get todayProgress => _goalCalories > 0
+      ? (todayTotalCalories / _goalCalories).clamp(0.0, 2.0)
+      : 0.0;
 
   /// 초기화
   Future<void> initialize() async {
     _apiKey = await _storageService.getApiKey();
     _goalCalories = await _storageService.getGoalCalories();
+    final modeStr = await _storageService.getAnalysisMode();
+    _analysisMode =
+        modeStr == 'gemini' ? AnalysisMode.gemini : AnalysisMode.local;
     if (_apiKey != null && _apiKey!.isNotEmpty) {
       _foodAnalysisService = FoodAnalysisService(apiKey: _apiKey!);
     }
@@ -63,6 +71,14 @@ class AppProvider extends ChangeNotifier {
     _apiKey = key;
     await _storageService.saveApiKey(key);
     _foodAnalysisService = FoodAnalysisService(apiKey: key);
+    notifyListeners();
+  }
+
+  /// 분석 모드 설정
+  Future<void> setAnalysisMode(AnalysisMode mode) async {
+    _analysisMode = mode;
+    await _storageService
+        .saveAnalysisMode(mode == AnalysisMode.gemini ? 'gemini' : 'local');
     notifyListeners();
   }
 
@@ -98,8 +114,11 @@ class AppProvider extends ChangeNotifier {
       notifyListeners();
       return null;
     }
-    if (_foodAnalysisService == null) {
-      _errorMessage = 'API 키를 먼저 설정해주세요.';
+
+    // Gemini 모드인데 API 키가 없으면 안내
+    if (_analysisMode == AnalysisMode.gemini && _foodAnalysisService == null) {
+      _errorMessage =
+          'Gemini API 키를 먼저 설정해주세요.\n설정에서 "로컬 분석"으로 변경하면 API 키 없이 사용할 수 있습니다.';
       notifyListeners();
       return null;
     }
@@ -109,7 +128,14 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await _foodAnalysisService!.analyzeFood(_selectedImage!);
+      final FoodAnalysisResult result;
+
+      if (_analysisMode == AnalysisMode.local) {
+        result = await _localService.analyzeFood(_selectedImage!);
+      } else {
+        result = await _foodAnalysisService!.analyzeFood(_selectedImage!);
+      }
+
       _currentResult = result;
       await _storageService.saveAnalysis(result);
       await refreshHistory();

@@ -34,8 +34,8 @@ class HistoryScreen extends StatelessWidget {
             actions: [
               if (provider.history.isNotEmpty)
                 IconButton(
-                  icon: const Icon(Icons.delete_sweep,
-                      color: Color(0xFF1A1A2E)),
+                  icon:
+                      const Icon(Icons.delete_sweep, color: Color(0xFF1A1A2E)),
                   onPressed: () => _confirmClearAll(context, provider),
                 ),
             ],
@@ -122,8 +122,8 @@ class HistoryScreen extends StatelessWidget {
               ),
             ),
             // 음식 카드 리스트
-            ...items.map((result) =>
-                _buildHistoryCard(context, result, provider)),
+            ...items
+                .map((result) => _buildHistoryCard(context, result, provider)),
             const SizedBox(height: 8),
           ],
         );
@@ -205,8 +205,7 @@ class HistoryScreen extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       DateFormat('HH:mm').format(result.analyzedAt),
-                      style: const TextStyle(
-                          fontSize: 12, color: Colors.grey),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   ],
                 ),

@@ -4,6 +4,10 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>음식 사진을 촬영하여 칼로리를 분석합니다</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>음식 사진을 갤러리에서 선택하여 칼로리를 분석합니다</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

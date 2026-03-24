@@ -7,6 +7,7 @@ class StorageService {
   static const String _historyKey = 'analysis_history';
   static const String _apiKeyKey = 'gemini_api_key';
   static const String _goalCaloriesKey = 'goal_calories';
+  static const String _analysisModeKey = 'analysis_mode';
 
   /// 분석 결과 저장
   Future<void> saveAnalysis(FoodAnalysisResult result) async {
@@ -22,8 +23,8 @@ class StorageService {
     final prefs = await SharedPreferences.getInstance();
     final jsonList = prefs.getStringList(_historyKey) ?? [];
     return jsonList
-        .map((e) => FoodAnalysisResult.fromJson(
-            jsonDecode(e) as Map<String, dynamic>))
+        .map((e) =>
+            FoodAnalysisResult.fromJson(jsonDecode(e) as Map<String, dynamic>))
         .toList();
   }
 
@@ -76,5 +77,17 @@ class StorageService {
   Future<int> getGoalCalories() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_goalCaloriesKey) ?? 2000;
+  }
+
+  /// 분석 모드 저장 ('local' | 'gemini')
+  Future<void> saveAnalysisMode(String mode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_analysisModeKey, mode);
+  }
+
+  /// 분석 모드 조회
+  Future<String> getAnalysisMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_analysisModeKey) ?? 'local';
   }
 }

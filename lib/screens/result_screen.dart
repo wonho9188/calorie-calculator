@@ -74,8 +74,8 @@ class ResultScreen extends StatelessWidget {
               )
             : Container(
                 color: Colors.grey.shade200,
-                child: const Icon(Icons.restaurant,
-                    size: 64, color: Colors.grey),
+                child:
+                    const Icon(Icons.restaurant, size: 64, color: Colors.grey),
               ),
       ),
     );
@@ -184,8 +184,7 @@ class ResultScreen extends StatelessWidget {
                       PieChartSectionData(
                         value: carbs,
                         color: const Color(0xFF4ECDC4),
-                        title:
-                            '${(carbs / total * 100).toStringAsFixed(0)}%',
+                        title: '${(carbs / total * 100).toStringAsFixed(0)}%',
                         titleStyle: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -196,8 +195,7 @@ class ResultScreen extends StatelessWidget {
                       PieChartSectionData(
                         value: protein,
                         color: const Color(0xFF6C63FF),
-                        title:
-                            '${(protein / total * 100).toStringAsFixed(0)}%',
+                        title: '${(protein / total * 100).toStringAsFixed(0)}%',
                         titleStyle: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -208,8 +206,7 @@ class ResultScreen extends StatelessWidget {
                       PieChartSectionData(
                         value: fat,
                         color: const Color(0xFFFF6B6B),
-                        title:
-                            '${(fat / total * 100).toStringAsFixed(0)}%',
+                        title: '${(fat / total * 100).toStringAsFixed(0)}%',
                         titleStyle: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -227,16 +224,13 @@ class ResultScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildLegendItem(
-                        '탄수화물', '${carbs.toStringAsFixed(1)}g',
+                    _buildLegendItem('탄수화물', '${carbs.toStringAsFixed(1)}g',
                         const Color(0xFF4ECDC4)),
                     const SizedBox(height: 12),
-                    _buildLegendItem(
-                        '단백질', '${protein.toStringAsFixed(1)}g',
+                    _buildLegendItem('단백질', '${protein.toStringAsFixed(1)}g',
                         const Color(0xFF6C63FF)),
                     const SizedBox(height: 12),
-                    _buildLegendItem(
-                        '지방', '${fat.toStringAsFixed(1)}g',
+                    _buildLegendItem('지방', '${fat.toStringAsFixed(1)}g',
                         const Color(0xFFFF6B6B)),
                   ],
                 ),
@@ -260,12 +254,10 @@ class ResultScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        Text(label,
-            style: const TextStyle(fontSize: 14, color: Colors.grey)),
+        Text(label, style: const TextStyle(fontSize: 14, color: Colors.grey)),
         const Spacer(),
         Text(value,
-            style: const TextStyle(
-                fontSize: 14, fontWeight: FontWeight.w600)),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
       ],
     );
   }
@@ -408,8 +400,10 @@ class ResultScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          _buildNutritionRow('단백질', '${summary.totalProtein.toStringAsFixed(1)}g'),
-          _buildNutritionRow('탄수화물', '${summary.totalCarbs.toStringAsFixed(1)}g'),
+          _buildNutritionRow(
+              '단백질', '${summary.totalProtein.toStringAsFixed(1)}g'),
+          _buildNutritionRow(
+              '탄수화물', '${summary.totalCarbs.toStringAsFixed(1)}g'),
           _buildNutritionRow('지방', '${summary.totalFat.toStringAsFixed(1)}g'),
           const Divider(height: 24),
           _buildNutritionRow('식이섬유', '${summary.fiber.toStringAsFixed(1)}g'),
@@ -428,8 +422,8 @@ class ResultScreen extends StatelessWidget {
         children: [
           Text(label, style: const TextStyle(fontSize: 15, color: Colors.grey)),
           Text(value,
-              style: const TextStyle(
-                  fontSize: 15, fontWeight: FontWeight.w600)),
+              style:
+                  const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
         ],
       ),
     );
